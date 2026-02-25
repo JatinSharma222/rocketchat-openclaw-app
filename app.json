@@ -1,0 +1,15 @@
+{
+    "id": "54C2A872-FDB8-4EEB-80F1-1E6E929B3D11",
+    "version": "0.0.1",
+    "requiredApiVersion": "^1.42.0",
+    "iconFile": "icon.png",
+    "author": {
+        "name": "Jatin Sharma",
+        "support": "https://github.com/JatinSharma222"
+    },
+    "name": "OpenClaw Integration",
+    "nameSlug": "openclaw-integration",
+    "classFile": "OpenClawApp.ts",
+    "description": "Integrates OpenClaw AI assistant into Rocket.Chat via slash commands.",
+    "implements": []
+}

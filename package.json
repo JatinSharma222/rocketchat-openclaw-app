@@ -1,0 +1,18 @@
+{
+    "name": "openclaw-integration",
+    "version": "0.0.1",
+    "description": "Rocket.Chat App for OpenClaw AI integration",
+    "scripts": {
+        "deploy": "rc-apps deploy",
+        "package": "rc-apps package",
+        "lint": "eslint . --ext .ts"
+    },
+    "devDependencies": {
+        "@rocket.chat/apps-engine": "^1.42.0",
+        "@types/node": "^16.18.126",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@rocket.chat/ui-kit": "^0.39.0"
+    }
+}
