@@ -12,6 +12,13 @@ A Rocket.Chat App that integrates OpenClaw AI assistant into your workspace via 
 
 <img width="1710" height="1013" alt="Screenshot 2026-02-26 at 5 36 00 AM" src="https://github.com/user-attachments/assets/4cc1b16e-0cf6-4bdc-ad1d-4eb1c3e0c3fe" />
 
+---
+
+## Error Handling
+
+Empty prompts are caught and the user is guided with the correct usage.
+
+<img width="1371" height="176" alt="Screenshot 2026-02-26 at 5 53 22 AM" src="https://github.com/user-attachments/assets/e5984e18-db0d-4e6c-a0a1-5c65089fa211" />
 
 ---
 
