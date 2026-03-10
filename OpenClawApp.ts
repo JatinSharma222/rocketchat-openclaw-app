@@ -5,8 +5,10 @@ import {
 } from '@rocket.chat/apps-engine/definition/accessors';
 import { App } from '@rocket.chat/apps-engine/definition/App';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
+import { ApiVisibility, ApiSecurity } from '@rocket.chat/apps-engine/definition/api';
 
 import { OpenClawCommand } from './commands/OpenClawCommand';
+import { OpenClawCallbackEndpoint } from './endpoints/OpenClawCallbackEndpoint';
 import { settings } from './settings/settings';
 
 export class OpenClawApp extends App {
@@ -15,10 +17,17 @@ export class OpenClawApp extends App {
     }
 
     public async extendConfiguration(configuration: IConfigurationExtend): Promise<void> {
-        // Register all settings
+        // Register settings
         await Promise.all(settings.map((setting) => configuration.settings.provideSetting(setting)));
 
         // Register slash command
         await configuration.slashCommands.provideSlashCommand(new OpenClawCommand(this));
+
+        // Register callback webhook endpoint
+        await configuration.api.provideApi({
+            visibility: ApiVisibility.PUBLIC,
+            security: ApiSecurity.UNSECURE,
+            endpoints: [new OpenClawCallbackEndpoint(this)],
+        });
     }
 }

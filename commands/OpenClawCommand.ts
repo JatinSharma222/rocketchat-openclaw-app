@@ -8,6 +8,7 @@ import { App } from '@rocket.chat/apps-engine/definition/App';
 
 import { OpenClawService } from '../services/OpenClawService';
 import { sendMessage } from '../lib/sendMessage';
+import { storeTask } from '../lib/taskMap';
 
 export class OpenClawCommand implements ISlashCommand {
     public command = 'openclaw';
@@ -23,24 +24,62 @@ export class OpenClawCommand implements ISlashCommand {
         modify: IModify,
         http: IHttp,
     ): Promise<void> {
-        const [, ...args] = context.getArguments();
         const prompt = context.getArguments().join(' ').trim();
 
         if (!prompt) {
-            await sendMessage(modify, context.getSender(), context.getRoom(), 'Please provide a prompt. Usage: `/openclaw <your question>`');
+            await sendMessage(
+                modify,
+                context.getSender(),
+                context.getRoom(),
+                'Please provide a prompt. Usage: `/openclaw <your question>`',
+            );
             return;
         }
 
-        // Show a "thinking" message
-        await sendMessage(modify, context.getSender(), context.getRoom(), `OpenClaw is thinking...`);
+        await sendMessage(
+            modify,
+            context.getSender(),
+            context.getRoom(),
+            `⏳ OpenClaw is thinking...`,
+        );
 
         try {
             const service = new OpenClawService(this.app, read, http);
-            const response = await service.query(prompt);
-            await sendMessage(modify, context.getSender(), context.getRoom(), `**OpenClaw:** ${response}`);
+            const result = await service.query(prompt);
+
+            if (result.mode === 'async') {
+                storeTask(result.taskId, {
+                    userId: context.getSender().id,
+                    roomId: context.getRoom().id,
+                    timestamp: Date.now(),
+                });
+
+                this.app.getLogger().info(`[OpenClaw] Task queued: ${result.taskId}`);
+
+                await sendMessage(
+                    modify,
+                    context.getSender(),
+                    context.getRoom(),
+                    `Task queued (ID: \`${result.taskId}\`). Response will appear here when ready.`,
+                );
+
+            } else {
+                await sendMessage(
+                    modify,
+                    context.getSender(),
+                    context.getRoom(),
+                    `**OpenClaw:** ${result.content}`,
+                );
+            }
+
         } catch (error) {
-            this.app.getLogger().error('OpenClaw command error:', error);
-            await sendMessage(modify, context.getSender(), context.getRoom(), `OpenClaw encountered an error. Please check your configuration.`);
+            this.app.getLogger().error('[OpenClaw] Command error:', error);
+            await sendMessage(
+                modify,
+                context.getSender(),
+                context.getRoom(),
+                'OpenClaw encountered an error. Please check your configuration.',
+            );
         }
     }
 }

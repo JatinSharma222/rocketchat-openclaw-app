@@ -25,3 +25,5 @@ yarn-error.log*
 # Package lock (keep package.json, ignore locks)
 package-lock.json
 yarn.lock
+
+CONTEXT.md

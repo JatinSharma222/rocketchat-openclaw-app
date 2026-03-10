@@ -3,6 +3,18 @@ import { App } from '@rocket.chat/apps-engine/definition/App';
 
 import { SETTING_API_KEY, SETTING_SERVER_URL, SETTING_MODEL, SETTING_MOCK_MODE } from '../settings/settings';
 
+export interface AsyncTaskResponse {
+    taskId: string;
+    mode: 'async';
+}
+
+export interface SyncTaskResponse {
+    content: string;
+    mode: 'sync' | 'mock';
+}
+
+export type OpenClawQueryResponse = AsyncTaskResponse | SyncTaskResponse;
+
 export class OpenClawService {
     constructor(
         private readonly app: App,
@@ -10,13 +22,16 @@ export class OpenClawService {
         private readonly http: IHttp,
     ) {}
 
-    public async query(prompt: string): Promise<string> {
+    public async query(prompt: string): Promise<OpenClawQueryResponse> {
         const isMockMode = await this.read.getEnvironmentReader().getSettings().getValueById(SETTING_MOCK_MODE);
 
-        // MOCK MODE — returns a fake response (for dev/testing)
+        // MOCK MODE — returns a fake synchronous response (for dev/testing)
         if (isMockMode) {
             this.app.getLogger().info('[OpenClaw] Mock mode enabled — returning fake response');
-            return `[MOCK] OpenClaw received your prompt: "${prompt}". This is a simulated response.`;
+            return {
+                mode: 'mock',
+                content: `[MOCK] OpenClaw received your prompt: "${prompt}". This is a simulated response.`,
+            };
         }
 
         // REAL MODE — calls the OpenClaw API
@@ -47,17 +62,23 @@ export class OpenClawService {
             throw new Error('No response received from OpenClaw API.');
         }
 
-        if (response.statusCode !== 200) {
+        if (response.statusCode !== 200 && response.statusCode !== 202) {
             throw new Error(`OpenClaw API returned status ${response.statusCode}: ${JSON.stringify(response.data)}`);
         }
 
-        // OpenAI-compatible response format
-        const content = response.data?.choices?.[0]?.message?.content;
+        if (response.data?.task_id) {
+            this.app.getLogger().info(`[OpenClaw] Async task started: ${response.data.task_id}`);
+            return {
+                mode: 'async',
+                taskId: response.data.task_id,
+            };
+        }
 
+        const content = response.data?.choices?.[0]?.message?.content;
         if (!content) {
             throw new Error('Unexpected response format from OpenClaw API.');
         }
 
-        return content;
+        return { mode: 'sync', content };
     }
 }
